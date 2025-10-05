@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="ブラウザで動くAI - Transformers.jsの日本語チュートリアル">
+    <title>Transformers.js チュートリアル</title>
+    <link rel="stylesheet" href="./assets/css/common.css">
+    <style>
+        .hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 80px 20px;
+            text-align: center;
+            border-radius: 15px;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+
+        .hero p {
+            font-size: 1.3em;
+            opacity: 0.95;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin: 50px 0;
+        }
+
+        .feature-card {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .feature-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .feature-card p {
+            color: #6c757d;
+            line-height: 1.6;
+        }
+
+        .chapters {
+            margin-top: 60px;
+        }
+
+        .chapter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .chapter-item {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 3px 15px rgba(0,0,0,0.1);
+            border-left: 5px solid #667eea;
+            transition: all 0.3s;
+        }
+
+        .chapter-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+
+        .chapter-number {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .chapter-item h3 {
+            color: #2c3e50;
+            margin-bottom: 12px;
+            font-size: 1.4em;
+        }
+
+        .chapter-item p {
+            color: #6c757d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .chapter-item a {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 25px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .chapter-item a:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .getting-started {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 12px;
+            margin: 50px 0;
+        }
+
+        .getting-started h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+
+        .getting-started pre {
+            background: #2c3e50;
+            color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+
+        .getting-started code {
+            font-family: 'Courier New', monospace;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2em;
+            }
+
+            .features,
+            .chapter-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ヒーローセクション -->
+        <div class="hero">
+            <h1>🚀 Transformers.js チュートリアル</h1>
+            <p>ブラウザで動くAI・機械学習 - サーバー不要でAIモデルを体験しよう</p>
+        </div>
+
+        <!-- 特徴 -->
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3>ブラウザで完結</h3>
+                <p>サーバー不要。すべてのAI処理がブラウザ内で完結します。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3>高速・軽量</h3>
+                <p>最適化されたモデルで、スムーズなAI体験を提供します。</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔒</div>
+                <h3>プライバシー保護</h3>
+                <p>データはあなたのデバイス内で処理。外部送信なし。</p>
+            </div>
+        </div>
+
+        <!-- はじめに -->
+        <div class="getting-started">
+            <h2>🎯 はじめに</h2>
+            <p>Transformers.jsは、Hugging Faceの人気ライブラリ「Transformers」をJavaScriptに移植したライブラリです。ブラウザやNode.js環境で、最先端のAI・機械学習モデルを実行できます。</p>
+
+            <h3 style="margin-top: 30px;">インストール方法</h3>
+            <p>CDNから直接読み込む場合：</p>
+            <pre><code>&lt;script type="module"&gt;
+  import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+&lt;/script&gt;</code></pre>
+
+            <p>npmでインストールする場合：</p>
+            <pre><code>npm install @xenova/transformers</code></pre>
+        </div>
+
+        <!-- チュートリアル一覧 -->
+        <div class="chapters">
+            <h2 style="color: #2c3e50; border-bottom: 3px solid #667eea; padding-bottom: 15px;">
+                📚 チュートリアル一覧
+            </h2>
+
+            <div class="chapter-grid">
+                <!-- 第1章 -->
+                <div class="chapter-item">
+                    <span class="chapter-number">第1章</span>
+                    <h3>はじめてのTransformers.js</h3>
+                    <p>感情分析の基本を学び、テキストがポジティブかネガティブかを判定します。</p>
+                    <a href="./chapter01/index.html">デモを見る →</a>
+                </div>
+
+                <!-- 第2章 -->
+                <div class="chapter-item">
+                    <span class="chapter-number">第2章</span>
+                    <h3>テキスト分類</h3>
+                    <p>Zero-Shot分類を使って、事前学習なしで自由なカテゴリに分類します。</p>
+                    <a href="./chapter02/index.html">デモを見る →</a>
+                </div>
+
+                <!-- 第3章 -->
+                <div class="chapter-item">
+                    <span class="chapter-number">第3章</span>
+                    <h3>質問応答システム</h3>
+                    <p>コンテキストから質問に対する答えを自動抽出します。</p>
+                    <a href="./chapter03/index.html">デモを見る →</a>
+                </div>
+
+                <!-- 第4章 -->
+                <div class="chapter-item">
+                    <span class="chapter-number">第4章</span>
+                    <h3>画像処理</h3>
+                    <p>画像内の物体を検出し、バウンディングボックスで囲みます。</p>
+                    <a href="./chapter04/index.html">デモを見る →</a>
+                </div>
+
+                <!-- 第5章 -->
+                <div class="chapter-item">
+                    <span class="chapter-number">第5章</span>
+                    <h3>音声処理</h3>
+                    <p>音声ファイルやマイク入力をテキストに変換します（音声認識）。</p>
+                    <a href="./chapter05/index.html">デモを見る →</a>
+                </div>
+
+                <!-- 第6章 -->
+                <div class="chapter-item">
+                    <span class="chapter-number">第6章</span>
+                    <h3>高度な応用</h3>
+                    <p>画像キャプション生成 - マルチモーダルAIで画像を文章で説明します。</p>
+                    <a href="./chapter06/index.html">デモを見る →</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- リソース -->
+        <div class="getting-started" style="margin-top: 60px;">
+            <h2>📖 関連リンク</h2>
+            <ul style="line-height: 2; margin-left: 20px;">
+                <li><a href="https://huggingface.co/docs/transformers.js" target="_blank" style="color: #667eea;">Transformers.js 公式ドキュメント</a></li>
+                <li><a href="https://github.com/xenova/transformers.js" target="_blank" style="color: #667eea;">Transformers.js GitHub リポジトリ</a></li>
+                <li><a href="https://huggingface.co/models" target="_blank" style="color: #667eea;">Hugging Face Models</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- フッター -->
+    <footer class="site-footer">
+        <p>
+            &copy; 2025 Transformers.js チュートリアル |
+            <a href="https://github.com/kkawailab/TransformersJS-tutorials" target="_blank">GitHub</a>
+        </p>
+        <p style="margin-top: 10px; font-size: 0.9em;">
+            Built with ❤️ and <a href="https://huggingface.co/docs/transformers.js" target="_blank">Transformers.js</a>
+        </p>
+    </footer>
+</body>
+</html>
