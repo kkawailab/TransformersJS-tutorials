@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第6章：画像キャプション生成 - Transformers.js</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 5px solid #f093fb;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 12px;
+            border: 2px solid #e9ecef;
+        }
+        .panel h2 {
+            color: #2c3e50;
+            margin-top: 0;
+            font-size: 20px;
+            border-bottom: 2px solid #f093fb;
+            padding-bottom: 10px;
+        }
+        .upload-zone {
+            border: 3px dashed #dee2e6;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: white;
+        }
+        .upload-zone:hover {
+            border-color: #f093fb;
+            background: #fff5f7;
+        }
+        .upload-zone.drag-over {
+            border-color: #f5576c;
+            background: #ffe0e6;
+        }
+        .upload-icon {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+        #fileInput {
+            display: none;
+        }
+        .image-preview {
+            margin-top: 20px;
+            display: none;
+        }
+        .image-preview img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .caption-output {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            min-height: 150px;
+            border-left: 5px solid #f093fb;
+        }
+        .caption-text {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #2c3e50;
+            font-style: italic;
+            margin: 0;
+        }
+        .caption-empty {
+            color: #adb5bd;
+            text-align: center;
+            padding: 40px;
+        }
+        button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 14px 35px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 15px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 25px rgba(245, 87, 108, 0.4);
+        }
+        button:disabled {
+            background: #ced4da;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        #status {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            margin: 20px 0;
+            min-height: 24px;
+            font-size: 15px;
+        }
+        .info-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        .info-banner h3 {
+            margin: 0 0 10px 0;
+        }
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #f093fb;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .features {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 30px;
+        }
+        .feature-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+        }
+        .feature-icon {
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .feature-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .feature-desc {
+            font-size: 13px;
+            color: #6c757d;
+        }
+        @media (max-width: 768px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .features {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 AIによる画像キャプション生成</h1>
+
+        <div class="info-banner">
+            <h3>🚀 マルチモーダルAIの実践</h3>
+            <p>画像を理解し、その内容を自然な文章で説明するAIシステムです</p>
+        </div>
+
+        <!-- メインコンテンツ -->
+        <div class="main-grid">
+            <!-- 左パネル：画像アップロード -->
+            <div class="panel">
+                <h2>📸 画像をアップロード</h2>
+
+                <div class="upload-zone" id="uploadZone">
+                    <div class="upload-icon">🖼️</div>
+                    <h3>画像をクリックまたはドラッグ＆ドロップ</h3>
+                    <p>JPG, PNG, GIF形式に対応</p>
+                    <input type="file" id="fileInput" accept="image/*">
+                </div>
+
+                <div class="image-preview" id="imagePreview">
+                    <img id="previewImg" alt="Preview">
+                </div>
+
+                <button id="generateBtn" style="display: none;">キャプションを生成</button>
+            </div>
+
+            <!-- 右パネル：生成されたキャプション -->
+            <div class="panel">
+                <h2>✨ 生成されたキャプション</h2>
+
+                <div class="loading-spinner" id="loadingSpinner">
+                    <div class="spinner"></div>
+                    <p>キャプションを生成中...</p>
+                </div>
+
+                <div class="caption-output" id="captionOutput">
+                    <div class="caption-empty">
+                        画像をアップロードしてキャプションを生成してください
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ステータス -->
+        <div id="status"></div>
+
+        <!-- 機能紹介 -->
+        <div class="features">
+            <div class="feature-card">
+                <div class="feature-icon">🤖</div>
+                <div class="feature-title">AI画像認識</div>
+                <div class="feature-desc">高精度な画像理解モデル</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">💬</div>
+                <div class="feature-title">自然言語生成</div>
+                <div class="feature-desc">人間らしい文章を自動生成</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">ブラウザで完結</div>
+                <div class="feature-desc">サーバー不要で動作</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Transformers.jsライブラリをインポート
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+
+        // ローカルモデルを無効化
+        env.allowLocalModels = false;
+
+        // DOM要素の取得
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const generateBtn = document.getElementById('generateBtn');
+        const captionOutput = document.getElementById('captionOutput');
+        const statusDiv = document.getElementById('status');
+        const loadingSpinner = document.getElementById('loadingSpinner');
+
+        // 画像キャプション生成パイプライン用のグローバル変数
+        let captioner = null;
+        let currentImageUrl = null;
+
+        /**
+         * 画像キャプション生成モデルの初期化
+         */
+        async function initModel() {
+            if (captioner) return; // 既にロード済みの場合はスキップ
+
+            try {
+                statusDiv.textContent = 'モデルを読み込んでいます...（初回は数分かかります）';
+
+                // image-to-textパイプラインを作成
+                // ViT-GPT2モデルを使用（画像からテキストを生成）
+                captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning');
+
+                statusDiv.textContent = 'モデルの読み込み完了！画像をアップロードしてください。';
+            } catch (error) {
+                statusDiv.textContent = 'エラー: ' + error.message;
+                console.error('モデル初期化エラー:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * ファイルが選択された時の処理
+         */
+        function handleFileSelect(file) {
+            if (!file || !file.type.startsWith('image/')) {
+                alert('画像ファイルを選択してください');
+                return;
+            }
+
+            // 画像プレビューを表示
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                currentImageUrl = e.target.result;
+                previewImg.src = currentImageUrl;
+                imagePreview.style.display = 'block';
+                generateBtn.style.display = 'block';
+
+                // キャプション出力をリセット
+                captionOutput.innerHTML = '<div class="caption-empty">「キャプションを生成」ボタンをクリックしてください</div>';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        /**
+         * キャプションを生成する関数
+         */
+        async function generateCaption() {
+            if (!currentImageUrl) return;
+
+            generateBtn.disabled = true;
+            loadingSpinner.style.display = 'block';
+            captionOutput.innerHTML = '';
+
+            try {
+                // モデルの初期化
+                await initModel();
+
+                statusDiv.textContent = 'キャプションを生成中...';
+
+                // 画像キャプション生成を実行
+                // max_new_tokens: 生成する最大トークン数
+                // num_beams: ビームサーチの幅（大きいほど品質が高いが遅い）
+                const result = await captioner(currentImageUrl, {
+                    max_new_tokens: 50,
+                    num_beams: 5
+                });
+
+                // 結果を表示
+                displayCaption(result[0].generated_text);
+
+                statusDiv.textContent = 'キャプション生成完了！';
+            } catch (error) {
+                statusDiv.textContent = 'エラーが発生しました: ' + error.message;
+                console.error('キャプション生成エラー:', error);
+                captionOutput.innerHTML = '<div class="caption-empty" style="color: #dc3545;">エラーが発生しました</div>';
+            } finally {
+                generateBtn.disabled = false;
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        /**
+         * 生成されたキャプションを表示
+         * @param {string} caption - 生成されたキャプションテキスト
+         */
+        function displayCaption(caption) {
+            // キャプションを装飾して表示
+            captionOutput.innerHTML = `
+                <div style="text-align: center; margin-bottom: 15px;">
+                    <span style="font-size: 36px;">💭</span>
+                </div>
+                <p class="caption-text">"${caption}"</p>
+                <div style="text-align: right; margin-top: 15px; color: #6c757d; font-size: 13px;">
+                    - AI Generated Caption
+                </div>
+            `;
+
+            // コンソールにも出力
+            console.log('生成されたキャプション:', caption);
+        }
+
+        // アップロードゾーンのクリックイベント
+        uploadZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // ファイル選択イベント
+        fileInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // ドラッグ＆ドロップのイベント
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            handleFileSelect(e.dataTransfer.files[0]);
+        });
+
+        // 生成ボタンのクリックイベント
+        generateBtn.addEventListener('click', generateCaption);
+
+        // モデルの事前読み込み
+        window.addEventListener('load', () => {
+            statusDiv.textContent = 'モデルを事前読み込み中...';
+            initModel();
+        });
+    </script>
+</body>
+</html>

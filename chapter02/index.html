@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第2章：テキスト分類 - Transformers.js</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 900px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f0f4f8;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+            resize: vertical;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 15px;
+            box-sizing: border-box;
+        }
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .category-tag {
+            background-color: #e8f4f8;
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 14px;
+            color: #2980b9;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #bdc3c7;
+            cursor: not-allowed;
+        }
+        #status {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: 10px;
+            min-height: 20px;
+        }
+        #results {
+            margin-top: 25px;
+        }
+        .result-item {
+            background-color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+        }
+        .result-label {
+            font-weight: bold;
+            color: #2c3e50;
+            font-size: 18px;
+            margin-bottom: 8px;
+        }
+        .result-score {
+            color: #27ae60;
+            font-size: 16px;
+        }
+        .score-bar {
+            background-color: #ddd;
+            height: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .score-fill {
+            background: linear-gradient(to right, #3498db, #2ecc71);
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .info-box {
+            background-color: #fff9e6;
+            border: 1px solid #ffe066;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Zero-Shot テキスト分類デモ</h1>
+
+        <div class="info-box">
+            <strong>💡 Zero-Shot分類とは？</strong><br>
+            事前にモデルを訓練していないカテゴリでも、カテゴリ名を指定するだけで分類できる技術です。
+        </div>
+
+        <!-- テキスト入力エリア -->
+        <div class="input-group">
+            <label for="textInput">分類するテキスト:</label>
+            <textarea id="textInput" rows="5" placeholder="分類したいテキストを入力してください...">Scientists have discovered a new planet orbiting a distant star. The planet is located in the habitable zone and may contain liquid water.</textarea>
+        </div>
+
+        <!-- カテゴリ入力エリア -->
+        <div class="input-group">
+            <label for="categoriesInput">分類カテゴリ（カンマ区切り）:</label>
+            <input type="text" id="categoriesInput" placeholder="例: science, sports, politics, entertainment" value="science, sports, politics, entertainment, technology, health">
+            <div class="category-tags" id="categoryTags"></div>
+        </div>
+
+        <!-- 分類ボタン -->
+        <button id="classifyBtn">テキストを分類</button>
+
+        <!-- ステータス表示 -->
+        <div id="status"></div>
+
+        <!-- 結果表示エリア -->
+        <div id="results"></div>
+    </div>
+
+    <script type="module">
+        // Transformers.jsライブラリをインポート
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+
+        // ローカルモデルを無効化
+        env.allowLocalModels = false;
+
+        // DOM要素の取得
+        const textInput = document.getElementById('textInput');
+        const categoriesInput = document.getElementById('categoriesInput');
+        const categoryTags = document.getElementById('categoryTags');
+        const classifyBtn = document.getElementById('classifyBtn');
+        const statusDiv = document.getElementById('status');
+        const resultsDiv = document.getElementById('results');
+
+        // Zero-Shot分類パイプライン用のグローバル変数
+        let classifier = null;
+
+        /**
+         * カテゴリタグを表示する関数
+         */
+        function updateCategoryTags() {
+            const categories = categoriesInput.value
+                .split(',')
+                .map(cat => cat.trim())
+                .filter(cat => cat.length > 0);
+
+            categoryTags.innerHTML = categories
+                .map(cat => `<span class="category-tag">${cat}</span>`)
+                .join('');
+        }
+
+        /**
+         * Zero-Shot分類モデルの初期化
+         */
+        async function initModel() {
+            if (classifier) return; // 既にロード済みの場合はスキップ
+
+            try {
+                statusDiv.textContent = 'モデルを読み込んでいます...（初回は数分かかる場合があります）';
+
+                // zero-shot-classificationパイプラインを作成
+                // このタスクは、学習していないカテゴリでも分類可能
+                classifier = await pipeline('zero-shot-classification');
+
+                statusDiv.textContent = 'モデルの読み込み完了！';
+            } catch (error) {
+                statusDiv.textContent = 'エラー: ' + error.message;
+                console.error('モデル初期化エラー:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * テキスト分類を実行する関数
+         */
+        async function classifyText() {
+            const text = textInput.value.trim();
+            const categoriesText = categoriesInput.value.trim();
+
+            // 入力チェック
+            if (!text) {
+                alert('テキストを入力してください');
+                return;
+            }
+
+            if (!categoriesText) {
+                alert('分類カテゴリを入力してください');
+                return;
+            }
+
+            // カテゴリを配列に変換
+            const categories = categoriesText
+                .split(',')
+                .map(cat => cat.trim())
+                .filter(cat => cat.length > 0);
+
+            if (categories.length === 0) {
+                alert('有効なカテゴリを入力してください');
+                return;
+            }
+
+            // ボタンを無効化
+            classifyBtn.disabled = true;
+            resultsDiv.innerHTML = '';
+
+            try {
+                // モデルの初期化
+                await initModel();
+
+                statusDiv.textContent = 'テキストを分類中...';
+
+                // Zero-Shot分類を実行
+                // candidate_labelsパラメータで分類先のカテゴリを指定
+                const result = await classifier(text, categories);
+
+                // 結果を表示
+                displayResults(result);
+
+                statusDiv.textContent = '分類完了！';
+            } catch (error) {
+                statusDiv.textContent = 'エラーが発生しました: ' + error.message;
+                console.error('分類エラー:', error);
+            } finally {
+                // ボタンを再度有効化
+                classifyBtn.disabled = false;
+            }
+        }
+
+        /**
+         * 分類結果を表示する関数
+         * @param {Object} result - 分類結果
+         *   result.labels: カテゴリ名の配列（スコアの高い順）
+         *   result.scores: 各カテゴリのスコア配列（0-1の範囲）
+         */
+        function displayResults(result) {
+            const { labels, scores } = result;
+
+            // 結果をHTML形式で表示
+            const resultsHTML = labels.map((label, index) => {
+                const score = scores[index];
+                const percentage = (score * 100).toFixed(2);
+
+                return `
+                    <div class="result-item">
+                        <div class="result-label">${label}</div>
+                        <div class="result-score">信頼度: ${percentage}%</div>
+                        <div class="score-bar">
+                            <div class="score-fill" style="width: ${percentage}%"></div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            resultsDiv.innerHTML = `
+                <h2>分類結果（信頼度順）</h2>
+                ${resultsHTML}
+            `;
+
+            // コンソールにも詳細を出力
+            console.log('分類結果:', result);
+        }
+
+        // イベントリスナーの設定
+        classifyBtn.addEventListener('click', classifyText);
+
+        // カテゴリ入力時にタグを更新
+        categoriesInput.addEventListener('input', updateCategoryTags);
+
+        // Enterキーで分類を実行（テキストエリアではShift+Enterで改行）
+        textInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                classifyText();
+            }
+        });
+
+        // カテゴリ入力でEnterキーを押したら分類実行
+        categoriesInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                classifyText();
+            }
+        });
+
+        // ページロード時にカテゴリタグを表示
+        updateCategoryTags();
+
+        // モデルの事前読み込み（オプション）
+        window.addEventListener('load', () => {
+            statusDiv.textContent = 'モデルを事前読み込み中...';
+            initModel();
+        });
+    </script>
+</body>
+</html>

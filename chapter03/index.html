@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第3章：質問応答システム - Transformers.js</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 4px solid #667eea;
+            padding-bottom: 12px;
+            margin-bottom: 25px;
+        }
+        .section {
+            margin-bottom: 25px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 15px;
+        }
+        textarea {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            resize: vertical;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 35px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        button:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        #status {
+            color: #7f8c8d;
+            font-style: italic;
+            margin-top: 12px;
+            min-height: 24px;
+        }
+        .answer-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 25px;
+            border-left: 5px solid #667eea;
+        }
+        .answer-text {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 12px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+        }
+        .answer-score {
+            color: #27ae60;
+            font-size: 16px;
+            margin-top: 8px;
+        }
+        .sample-questions {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        .sample-questions h3 {
+            margin-top: 0;
+            color: #555;
+            font-size: 14px;
+        }
+        .question-btn {
+            background: white;
+            color: #667eea;
+            padding: 8px 16px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: all 0.2s;
+        }
+        .question-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+        .info-panel {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📚 質問応答システムデモ</h1>
+
+        <div class="info-panel">
+            <strong>💡 使い方:</strong> コンテキスト（文章）を入力し、その内容に関する質問を入力してください。AIがコンテキストから答えを抽出します。
+        </div>
+
+        <!-- コンテキスト入力 -->
+        <div class="section">
+            <label for="contextInput">コンテキスト（回答の元となる文章）:</label>
+            <textarea id="contextInput" rows="8" placeholder="質問に答えるための文章を入力してください...">Transformers.js is a JavaScript library that allows you to run machine learning models directly in the browser. It is based on Hugging Face's Transformers library for Python. The library supports various tasks including text classification, question answering, translation, and image processing. One of the key advantages is that it runs entirely client-side, meaning no server is needed. This makes it perfect for privacy-sensitive applications and reduces infrastructure costs. The models are downloaded and cached in the browser, so subsequent uses are much faster.</textarea>
+        </div>
+
+        <!-- 質問入力 -->
+        <div class="section">
+            <label for="questionInput">質問:</label>
+            <input type="text" id="questionInput" placeholder="コンテキストに基づいた質問を入力してください..." value="What is Transformers.js?">
+
+            <!-- サンプル質問 -->
+            <div class="sample-questions">
+                <h3>📌 サンプル質問（クリックで入力）</h3>
+                <button class="question-btn" data-question="What is Transformers.js?">What is Transformers.js?</button>
+                <button class="question-btn" data-question="Where does Transformers.js run?">Where does it run?</button>
+                <button class="question-btn" data-question="What tasks does it support?">What tasks does it support?</button>
+                <button class="question-btn" data-question="What are the advantages?">What are the advantages?</button>
+            </div>
+        </div>
+
+        <!-- 質問ボタン -->
+        <button id="answerBtn">回答を取得</button>
+
+        <!-- ステータス表示 -->
+        <div id="status"></div>
+
+        <!-- 回答表示エリア -->
+        <div id="answerContainer"></div>
+    </div>
+
+    <script type="module">
+        // Transformers.jsライブラリをインポート
+        import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+
+        // ローカルモデルを無効化
+        env.allowLocalModels = false;
+
+        // DOM要素の取得
+        const contextInput = document.getElementById('contextInput');
+        const questionInput = document.getElementById('questionInput');
+        const answerBtn = document.getElementById('answerBtn');
+        const statusDiv = document.getElementById('status');
+        const answerContainer = document.getElementById('answerContainer');
+
+        // Question Answeringパイプライン用のグローバル変数
+        let qa = null;
+
+        /**
+         * Question Answeringモデルの初期化
+         */
+        async function initModel() {
+            if (qa) return; // 既にロード済みの場合はスキップ
+
+            try {
+                statusDiv.textContent = 'モデルを読み込んでいます...（初回は時間がかかります）';
+
+                // question-answeringパイプラインを作成
+                // コンテキスト文章から質問に対する回答を抽出します
+                qa = await pipeline('question-answering');
+
+                statusDiv.textContent = 'モデルの読み込み完了！';
+            } catch (error) {
+                statusDiv.textContent = 'エラー: ' + error.message;
+                console.error('モデル初期化エラー:', error);
+                throw error;
+            }
+        }
+
+        /**
+         * 質問応答を実行する関数
+         */
+        async function answerQuestion() {
+            const context = contextInput.value.trim();
+            const question = questionInput.value.trim();
+
+            // 入力チェック
+            if (!context) {
+                alert('コンテキストを入力してください');
+                return;
+            }
+
+            if (!question) {
+                alert('質問を入力してください');
+                return;
+            }
+
+            // ボタンを無効化
+            answerBtn.disabled = true;
+            answerContainer.innerHTML = '';
+
+            try {
+                // モデルの初期化
+                await initModel();
+
+                statusDiv.textContent = '回答を検索中...';
+
+                // Question Answeringを実行
+                // question: 質問文
+                // context: 回答の元となる文章
+                const result = await qa(question, context);
+
+                // 結果を表示
+                displayAnswer(result);
+
+                statusDiv.textContent = '回答完了！';
+            } catch (error) {
+                statusDiv.textContent = 'エラーが発生しました: ' + error.message;
+                console.error('質問応答エラー:', error);
+            } finally {
+                // ボタンを再度有効化
+                answerBtn.disabled = false;
+            }
+        }
+
+        /**
+         * 回答を表示する関数
+         * @param {Object} result - 質問応答の結果
+         *   result.answer: 抽出された回答テキスト
+         *   result.score: 回答の信頼度スコア (0-1の範囲)
+         */
+        function displayAnswer(result) {
+            const { answer, score } = result;
+
+            // スコアをパーセンテージに変換
+            const percentage = (score * 100).toFixed(2);
+
+            // 信頼度に応じたメッセージ
+            let confidenceMessage = '';
+            if (score > 0.8) {
+                confidenceMessage = '非常に高い信頼度で回答を見つけました！';
+            } else if (score > 0.5) {
+                confidenceMessage = 'まあまあの信頼度で回答を見つけました。';
+            } else {
+                confidenceMessage = '回答の信頼度は低めです。コンテキストに明確な答えがない可能性があります。';
+            }
+
+            // 回答を表示
+            answerContainer.innerHTML = `
+                <div class="answer-box">
+                    <h2>💡 回答</h2>
+                    <div class="answer-text">${answer}</div>
+                    <div class="answer-score">
+                        信頼度スコア: ${percentage}%<br>
+                        ${confidenceMessage}
+                    </div>
+                </div>
+            `;
+
+            // コンソールに詳細を出力
+            console.log('質問応答結果:', result);
+        }
+
+        /**
+         * サンプル質問ボタンのクリックイベント
+         */
+        function setupSampleQuestions() {
+            const questionButtons = document.querySelectorAll('.question-btn');
+            questionButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const question = btn.getAttribute('data-question');
+                    questionInput.value = question;
+                });
+            });
+        }
+
+        // イベントリスナーの設定
+        answerBtn.addEventListener('click', answerQuestion);
+
+        // Enterキーで質問を実行
+        questionInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                answerQuestion();
+            }
+        });
+
+        // サンプル質問ボタンのセットアップ
+        setupSampleQuestions();
+
+        // モデルの事前読み込み（オプション）
+        window.addEventListener('load', () => {
+            statusDiv.textContent = 'モデルを事前読み込み中...';
+            initModel();
+        });
+    </script>
+</body>
+</html>
