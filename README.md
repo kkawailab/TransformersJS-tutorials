@@ -260,7 +260,7 @@ Transformers.jsの核心技術は、2017年にGoogleが発表した**「Attentio
   - **基盤**: NLLB (No Language Left Behind, Meta)
   - **特徴**: 200言語対応の翻訳モデル、英語→日本語翻訳に使用
 
-すべてのモデルはHugging Face Model Hubから自動的にダウンロードされ、ブラウザにキャッシュされます。
+> **重要**: すべてのモデルはHugging Face Model Hubから自動的にダウンロードされ、ブラウザにキャッシュされます。
 
 ## 目次
 
