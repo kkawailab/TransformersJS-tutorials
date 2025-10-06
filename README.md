@@ -223,6 +223,45 @@ Transformers.jsの核心技術は、2017年にGoogleが発表した**「Attentio
 ### オフライン動作
 一度モデルをダウンロードすれば、インターネット接続なしで動作します。ネットワークが不安定な環境や、オフライン必須のアプリケーションに最適です。
 
+## 使用している基盤モデル
+
+このチュートリアルでは、以下のHugging Face事前学習済みモデル（ONNX形式）を使用しています：
+
+### 第1章：感情分析
+- **モデル**: `Xenova/bert-base-multilingual-uncased-sentiment`
+- **基盤**: BERT (Bidirectional Encoder Representations from Transformers)
+- **特徴**: 多言語対応の感情分析モデル、1〜5つ星の評価を出力
+
+### 第2章：テキスト分類
+- **モデル**: デフォルトのゼロショット分類モデル（Facebook BART-large-mnli）
+- **基盤**: BART (Bidirectional and Auto-Regressive Transformers)
+- **特徴**: 学習していないカテゴリでも分類可能なゼロショット学習
+
+### 第3章：質問応答
+- **モデル**: デフォルトのQAモデル（DistilBERT）
+- **基盤**: DistilBERT (蒸留されたBERT)
+- **特徴**: BERTを軽量化したモデル、高速な質問応答
+
+### 第4章：物体検出
+- **モデル**: `Xenova/detr-resnet-50`
+- **基盤**: DETR (DEtection TRansformer) + ResNet-50
+- **特徴**: Transformerベースの物体検出、COCO 80クラスに対応
+
+### 第5章：音声認識
+- **モデル**: `Xenova/whisper-small`
+- **基盤**: Whisper (OpenAI)
+- **特徴**: 多言語音声認識、日本語を含む100言語以上に対応
+
+### 第6章：画像キャプション生成
+- **モデル1**: `Xenova/vit-gpt2-image-captioning`
+  - **基盤**: Vision Transformer (ViT) + GPT-2
+  - **特徴**: 画像から英語のキャプションを生成
+- **モデル2**: `Xenova/nllb-200-distilled-600M`
+  - **基盤**: NLLB (No Language Left Behind, Meta)
+  - **特徴**: 200言語対応の翻訳モデル、英語→日本語翻訳に使用
+
+すべてのモデルはHugging Face Model Hubから自動的にダウンロードされ、ブラウザにキャッシュされます。
+
 ## 目次
 
 ### [第1章：はじめてのTransformers.js](./chapter01/README.md)
