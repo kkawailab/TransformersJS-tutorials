@@ -60,7 +60,7 @@
 
 ### 1. Transformer アーキテクチャ
 
-Transformers.jsの核心技術は、2017年にGoogleが発表した**「Attention Is All You Need」**論文で提案された**Transformerアーキテクチャ**です。
+Transformers.jsの核心技術は、2017年にGoogleが発表した **「Attention Is All You Need」** 論文で提案された**Transformerアーキテクチャ**です。
 
 #### Self-Attention メカニズム
 - 入力シーケンス内の各要素間の関係性を学習
