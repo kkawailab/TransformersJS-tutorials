@@ -79,7 +79,7 @@
         <p>テキストを入力して、そのテキストがポジティブかネガティブかを分析します。</p>
 
         <!-- テキスト入力エリア -->
-        <textarea id="textInput" rows="5" placeholder="ここにテキストを入力してください...">I love this product! It's amazing and works perfectly.</textarea>
+        <textarea id="textInput" rows="5" placeholder="ここにテキストを入力してください...">この製品は本当に素晴らしい！使いやすくて完璧です。</textarea>
 
         <!-- 分析ボタン -->
         <button id="analyzeBtn">感情を分析</button>
@@ -118,8 +118,8 @@
                 statusDiv.textContent = 'モデルを読み込んでいます...（初回は時間がかかります）';
 
                 // sentiment-analysis（感情分析）パイプラインを作成
-                // デフォルトで英語の感情分析モデルが使用されます
-                classifier = await pipeline('sentiment-analysis');
+                // 多言語対応モデルを使用（日本語にも対応）
+                classifier = await pipeline('sentiment-analysis', 'Xenova/bert-base-multilingual-uncased-sentiment');
 
                 statusDiv.textContent = 'モデルの読み込みが完了しました！';
             } catch (error) {
@@ -177,13 +177,21 @@
             // スコアをパーセンテージに変換
             const percentage = (score * 100).toFixed(2);
 
-            // ラベルを日本語に変換
-            const labelJa = label === 'POSITIVE' ? 'ポジティブ' : 'ネガティブ';
+            // ラベルを日本語に変換（多言語モデルは1-5の星評価を返す）
+            const stars = parseInt(label.split(' ')[0]);
+            let labelJa = '';
+            if (stars >= 4) {
+                labelJa = 'ポジティブ';
+            } else if (stars <= 2) {
+                labelJa = 'ネガティブ';
+            } else {
+                labelJa = '中立';
+            }
 
             // 結果を表示
             resultDiv.innerHTML = `
                 <h3>分析結果</h3>
-                <p><strong>感情:</strong> ${labelJa}</p>
+                <p><strong>感情:</strong> ${labelJa} (${stars}つ星)</p>
                 <p><strong>信頼度:</strong> ${percentage}%</p>
             `;
 

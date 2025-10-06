@@ -285,6 +285,7 @@
 
         // 画像キャプション生成パイプライン用のグローバル変数
         let captioner = null;
+        let translator = null;
         let currentImageUrl = null;
 
         /**
@@ -299,6 +300,11 @@
                 // image-to-textパイプラインを作成
                 // ViT-GPT2モデルを使用（画像からテキストを生成）
                 captioner = await pipeline('image-to-text', 'Xenova/vit-gpt2-image-captioning');
+
+                statusDiv.textContent = '翻訳モデルを読み込んでいます...';
+
+                // 翻訳パイプラインを作成（英語→日本語）
+                translator = await pipeline('translation', 'Xenova/nllb-200-distilled-600M');
 
                 statusDiv.textContent = 'モデルの読み込み完了！画像をアップロードしてください。';
             } catch (error) {
@@ -355,8 +361,19 @@
                     num_beams: 5
                 });
 
-                // 結果を表示
-                displayCaption(result[0].generated_text);
+                const englishCaption = result[0].generated_text;
+
+                // 英語キャプションを日本語に翻訳
+                statusDiv.textContent = '日本語に翻訳中...';
+                const translatedResult = await translator(englishCaption, {
+                    src_lang: 'eng_Latn',  // 英語
+                    tgt_lang: 'jpn_Jpan'   // 日本語
+                });
+
+                const japaneseCaption = translatedResult[0].translation_text;
+
+                // 結果を表示（英語と日本語の両方）
+                displayCaption(englishCaption, japaneseCaption);
 
                 statusDiv.textContent = 'キャプション生成完了！';
             } catch (error) {
@@ -371,22 +388,29 @@
 
         /**
          * 生成されたキャプションを表示
-         * @param {string} caption - 生成されたキャプションテキスト
+         * @param {string} englishCaption - 英語のキャプション
+         * @param {string} japaneseCaption - 日本語のキャプション
          */
-        function displayCaption(caption) {
-            // キャプションを装飾して表示
+        function displayCaption(englishCaption, japaneseCaption) {
+            // キャプションを装飾して表示（日本語と英語の両方）
             captionOutput.innerHTML = `
                 <div style="text-align: center; margin-bottom: 15px;">
                     <span style="font-size: 36px;">💭</span>
                 </div>
-                <p class="caption-text">"${caption}"</p>
+                <p class="caption-text" style="font-size: 22px; color: #2c3e50; margin-bottom: 15px;">
+                    "${japaneseCaption}"
+                </p>
+                <p class="caption-text" style="font-size: 16px; color: #7f8c8d; font-style: italic;">
+                    "${englishCaption}"
+                </p>
                 <div style="text-align: right; margin-top: 15px; color: #6c757d; font-size: 13px;">
                     - AI Generated Caption
                 </div>
             `;
 
             // コンソールにも出力
-            console.log('生成されたキャプション:', caption);
+            console.log('生成されたキャプション（日本語）:', japaneseCaption);
+            console.log('生成されたキャプション（英語）:', englishCaption);
         }
 
         // アップロードゾーンのクリックイベント

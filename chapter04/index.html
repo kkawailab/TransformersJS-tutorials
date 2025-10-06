@@ -207,6 +207,90 @@
         let currentImage = null;
         let detectionData = null;
 
+        // 英語ラベルを日本語に変換する辞書
+        const labelTranslations = {
+            'person': '人',
+            'bicycle': '自転車',
+            'car': '車',
+            'motorcycle': 'オートバイ',
+            'airplane': '飛行機',
+            'bus': 'バス',
+            'train': '電車',
+            'truck': 'トラック',
+            'boat': 'ボート',
+            'traffic light': '信号機',
+            'fire hydrant': '消火栓',
+            'stop sign': '停止標識',
+            'parking meter': 'パーキングメーター',
+            'bench': 'ベンチ',
+            'bird': '鳥',
+            'cat': '猫',
+            'dog': '犬',
+            'horse': '馬',
+            'sheep': '羊',
+            'cow': '牛',
+            'elephant': '象',
+            'bear': '熊',
+            'zebra': 'シマウマ',
+            'giraffe': 'キリン',
+            'backpack': 'リュックサック',
+            'umbrella': '傘',
+            'handbag': 'ハンドバッグ',
+            'tie': 'ネクタイ',
+            'suitcase': 'スーツケース',
+            'frisbee': 'フリスビー',
+            'skis': 'スキー',
+            'snowboard': 'スノーボード',
+            'sports ball': 'スポーツボール',
+            'kite': '凧',
+            'baseball bat': '野球バット',
+            'baseball glove': '野球グローブ',
+            'skateboard': 'スケートボード',
+            'surfboard': 'サーフボード',
+            'tennis racket': 'テニスラケット',
+            'bottle': 'ボトル',
+            'wine glass': 'ワイングラス',
+            'cup': 'カップ',
+            'fork': 'フォーク',
+            'knife': 'ナイフ',
+            'spoon': 'スプーン',
+            'bowl': 'ボウル',
+            'banana': 'バナナ',
+            'apple': 'りんご',
+            'sandwich': 'サンドイッチ',
+            'orange': 'オレンジ',
+            'broccoli': 'ブロッコリー',
+            'carrot': 'にんじん',
+            'hot dog': 'ホットドッグ',
+            'pizza': 'ピザ',
+            'donut': 'ドーナツ',
+            'cake': 'ケーキ',
+            'chair': '椅子',
+            'couch': 'ソファ',
+            'potted plant': '鉢植え',
+            'bed': 'ベッド',
+            'dining table': 'ダイニングテーブル',
+            'toilet': 'トイレ',
+            'tv': 'テレビ',
+            'laptop': 'ノートパソコン',
+            'mouse': 'マウス',
+            'remote': 'リモコン',
+            'keyboard': 'キーボード',
+            'cell phone': '携帯電話',
+            'microwave': '電子レンジ',
+            'oven': 'オーブン',
+            'toaster': 'トースター',
+            'sink': 'シンク',
+            'refrigerator': '冷蔵庫',
+            'book': '本',
+            'clock': '時計',
+            'vase': '花瓶',
+            'scissors': 'はさみ',
+            'teddy bear': 'テディベア',
+            'hair drier': 'ドライヤー',
+            'toothbrush': '歯ブラシ'
+        };
+
         /**
          * 物体検出モデルの初期化
          */
@@ -326,6 +410,9 @@
             detections.forEach((detection, index) => {
                 const { box, label, score } = detection;
 
+                // ラベルを日本語に変換
+                const labelJa = labelTranslations[label] || label;
+
                 // バウンディングボックスの座標を計算
                 const x = box.xmin * canvas.width / 100;
                 const y = box.ymin * canvas.height / 100;
@@ -340,22 +427,22 @@
                 ctx.lineWidth = 3;
                 ctx.strokeRect(x, y, width, height);
 
-                // ラベルの背景を描画
+                // ラベルの背景を描画（日本語ラベルを使用）
                 ctx.fillStyle = color;
-                const labelText = `${label} ${(score * 100).toFixed(1)}%`;
+                const labelText = `${labelJa} ${(score * 100).toFixed(1)}%`;
                 const textMetrics = ctx.measureText(labelText);
                 const textHeight = 20;
                 ctx.fillRect(x, y - textHeight, textMetrics.width + 10, textHeight);
 
-                // ラベルテキストを描画
+                // ラベルテキストを描画（日本語）
                 ctx.fillStyle = 'white';
                 ctx.font = 'bold 14px Arial';
                 ctx.fillText(labelText, x + 5, y - 5);
 
-                // 検出結果リストに追加
+                // 検出結果リストに追加（日本語ラベルを使用）
                 resultsHTML += `
                     <div class="detection-item">
-                        <span class="detection-label">${label}</span>
+                        <span class="detection-label">${labelJa}</span>
                         <span class="detection-score">信頼度: ${(score * 100).toFixed(2)}%</span>
                     </div>
                 `;

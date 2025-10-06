@@ -251,10 +251,10 @@
                 progressBar.style.display = 'block';
 
                 // automatic-speech-recognitionパイプラインを作成
-                // Whisper Tinyモデルを使用（軽量で高速）
+                // Whisper Smallモデルを使用（多言語対応、日本語も認識可能）
                 transcriber = await pipeline(
                     'automatic-speech-recognition',
-                    'Xenova/whisper-tiny.en'
+                    'Xenova/whisper-small'
                 );
 
                 progressBar.style.display = 'none';
